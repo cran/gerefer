@@ -1,0 +1,9 @@
+52c7c8f2c083897fca8877edfffd61e5 *DESCRIPTION
+9bfdfa255fda0ec46dccf14d36c05abb *NAMESPACE
+d1bbfe7651d251d2676ae255d1f7b432 *R/article_bib.R
+1168e3848651c55e0a186c8e372287c4 *R/example_database.R
+9363b620fc9f304cb70e8bb519ee5e72 *R/redu_leter.R
+e77688a1e5ef6e8650cfa462b06075d0 *inst/extdata/example_database.csv
+1288befa84299ae460d949bf31466487 *man/article_bib.Rd
+d5abea5bc4bd89a68615bb59b3d219fa *man/example_database.Rd
+d2778e1886add7eb8e4984f21cc130d4 *man/redu_leter.Rd
