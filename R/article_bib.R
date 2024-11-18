@@ -71,15 +71,240 @@
 #'
 article_bib  <- function(input_date, input_tam, position_artic, total_list){
 
+  # Data entry
+  input_date <- input_date
+  input_tam <- input_tam
+
+  # Generate the main list of articles
+  lister_princ <- principal_lister(input_date,input_tam)
+  lista_prin <- lister_princ[[1]]
+  lista_prin <- as.data.frame(lista_prin)
+
+  # Call the author team function
+  equipe_autors <- function(lista_prin){
+
+    # Separate the authors and calculate the length
+    eq_autor <- lista_prin$Authors
+    comp_autor <- length(eq_autor)
+
+    # Call the function from the authors name
+    minu_autor <- function(eq_autor){
+
+      # Data entry
+      nom_autsep <- eq_autor
+
+      # Change the letter to lowercase
+      autor_minu <- tolower(nom_autsep)
+
+      # Separate words
+      let_minu <- strsplit(autor_minu,"")
+
+      # Select first letter of words
+      prl_minu <- let_minu[[1]][1]
+
+      # Capitalize the first letter
+      prl_maiu <- toupper(prl_minu)
+
+      # Replace the lowercase letter with the uppercase letter
+      autor <- sub(prl_minu,prl_maiu,autor_minu)
+
+      # Return the author's name
+      return(autor)
+
+    }
+
+    # Call the function that shortens the name
+    autor <- minu_autor(eq_autor)
+
+    # Create variables
+    nome_autores <- numeric(comp_autor)
+    nom_autor <- numeric(comp_autor)
+    tam_nom <- numeric(comp_autor)
+
+    # Create the loop
+    for(i in 1:comp_autor){
+
+      #Separate the author's name
+      nom_autor[i] <- strsplit(eq_autor[i],split = " ")
+      nom_autsep <- strsplit(nom_autor[[i]],split = " ")
+
+      # Number of words in the name and connection element
+      tam_nom[i] <- length(nom_autsep)
+      virgula <- ", "
+
+      # Create the conditional
+      if(tam_nom[i] <= 2){
+
+        nom_autsep <- unlist(nom_autsep)
+        ent_autor <- nom_autsep[1]
+        autorsep <- minu_autor(ent_autor)
+        nome_autor <- paste0(autorsep,virgula,nom_autsep[2])
+
+      }else{
+
+        nom_autsep <- strsplit(nom_autor[[i]],split = " ")
+        nom_autsep <- unlist(nom_autsep)
+        tam_nom[i] <- length(nom_autsep)
+        indimax <- tam_nom[i]-1
+        nomes_separ <- numeric(indimax)
+        ent_autor <- numeric(tam_nom[i])
+
+        for(indi in 1:indimax) {
+          ent_autor <- nom_autsep[indi]
+          autorsep <- minu_autor(ent_autor)
+          nomes_separ[indi] <- autorsep
+        }
+
+        # Create variable and connection element
+        nome_maior <- numeric(tam_nom[i])
+        conexao1 <- " "
+        conexao2 <- ", "
+
+        # Create the first case
+        nome_maior[1] <- paste0(nomes_separ[1],conexao1)
+        nom_autor <- nome_maior[1]
+
+        # Loop to create other cases
+        for(inde in 2:(indimax-1)) {
+
+          nome_maior[inde] <- paste0(nome_maior[inde-1],nomes_separ[inde],conexao1)
+          nom_autor <- nome_maior[inde]
+
+        }
+
+        # Create the penultimate case
+        nome_maior[indimax] <- paste0(nome_maior[inde],nomes_separ[indimax])
+        nom_autor <- nome_maior[indimax]
+        nom_autsep[tam_nom[i]]
+
+        # Create the last case
+        ind_fim <- tam_nom[i]
+        nome_maior[ind_fim] <- paste0(nom_autor,conexao2,nom_autsep[tam_nom[i]])
+        nom_autor <- nome_maior[ind_fim]
+        nome_autor <- nom_autor
+      }
+
+      # Create the variable with the names of the authors
+      nome_autores[i] <- nome_autor
+    }
+
+    # Create the set of author names
+    autores <- nome_autores
+
+    # Create positions of interest
+    posicao_anos <- lista_prin$Year
+    posicaoinfo <- which(posicao_anos != "")
+
+    # Create author team sizes
+    tamanhos <- lista_prin$`Number of authors`
+    tamanho <- tamanhos[posicaoinfo]
+    tamanho <- as.numeric(tamanho)
+
+    # Calculate team list size
+    comp <- length(posicaoinfo)
+
+    # Create counter positions
+    posicaocontc <- numeric(comp)
+    posicaocont <- numeric(comp)
+
+    # Create the first counter position
+    posicaocontc[1] <- 0
+    posicaocont[1] <- tamanho[1]
+
+    #Create the loop for length and position counter
+    for(i in 2:comp){
+
+      posicaocontc[i] <- posicaocontc[i-1] + tamanho[i-1]
+      posicaocont[i] <- posicaocont[i-1] + tamanho[i]
+
+    }
+
+    # Create variables
+    equipesnomes <- numeric()
+
+    # Create the loop
+    for(j in 1:(comp-1)){
+
+      # Create positions and groups of authors
+      indice <- (posicaocontc[j]+1):posicaocontc[j+1]
+      autor <- autores[indice]
+
+      # Create the conditions
+      if(tamanho[j] <= 1){
+
+        equipesnom <- autor
+
+      }else{
+
+        conexao <- " and "
+        equipenom <- numeric(tamanho[j])
+
+        # Create team first name
+        equipenom[1] <- paste0(autor[1],conexao)
+        equipesnom <- equipenom[1]
+
+        # Create team name sequence
+        for(ind in 2:(tamanho[j]-1)) {
+
+          equipenom[ind] <- paste0(equipenom[ind-1],
+                                   autor[ind],conexao)
+          equipesnom <- equipenom[ind]
+        }
+
+        # Create the last name of the sequence
+        equipenom[tamanho[j]] <- paste0(equipenom[tamanho[j]-1],
+                                        autor[tamanho[j]])
+        equipesnom <- equipenom[tamanho[j]]
+      }
+      equipesnomes[j] <- equipesnom
+    }
+
+    # Create last position names
+    indice <- (posicaocont[comp-1]+1):posicaocont[comp]
+    autor <- autores[indice]
+
+    # Create the conditions
+    j <- comp
+
+    if(tamanho[j] <= 1){
+
+      equipesnom <- autor
+
+    }else{
+
+      conexao <- " and "
+      equipenom <- numeric(tamanho[j])
+
+      # Create first name
+      equipenom[1] <- paste0(autor[1],conexao)
+      equipesnom <- equipenom[1]
+
+      # Create the last sequence
+      for(ind in 2:tamanho[j]-1) {
+
+        equipenom[ind] <- paste0(equipenom[ind-1],
+                                 autor[ind],conexao)
+        equipesnom <- equipenom[ind]
+      }
+
+      # Group the last name of the author team
+      equipenom[tamanho[j]] <- paste0(equipenom[tamanho[j]-1],
+                                      autor[tamanho[j]])
+      equipesnom <- equipenom[tamanho[j]]
+    }
+    equipesnomes[j] <- equipesnom
+
+    return(equipesnomes)
+
+  }
+
+  # Create the names of the author teams
+  equipesnomes <- equipe_autors(lista_prin)
+
   # Call the function that generates the intermediate information
-  gerad_lister <- function(input_date, input_tam, position_artic, total_list){
+  gerad_lister <- function(input_date,input_tam,lista_prin,
+                           equipesnomes,position_artic,total_list){
 
-    # Generate the main list of articles
-    lister_princ <- principal_lister(input_date,input_tam)
-
-    # Generate the main list of articles
-    lista_prin <- lister_princ[[1]]
-    lista_prin <- as.data.frame(lista_prin)
     titulos <- lista_prin$Article
     posicaovazio <- which(titulos != "")
     titu_art <- titulos[posicaovazio]
@@ -147,6 +372,16 @@ article_bib  <- function(input_date, input_tam, position_artic, total_list){
       pages[i] <- base_scopuswos$PP[j]
       year[i] <- base_scopuswos$PY[j]
       publisher[i] <- base_scopuswos$PU[j]
+    }
+
+    pagi <- strsplit(pages,split = " ")
+    traco <- "--"
+    pagin <- numeric(n)
+
+    for(i in 1:n){
+
+      pagin[i] <- paste0(pagi[[i]][1],traco,pagi[[i]][3])
+
     }
 
     # Create variables
@@ -242,7 +477,7 @@ article_bib  <- function(input_date, input_tam, position_artic, total_list){
     publisher <- editor
 
     # Create the table with the variables
-    tabel_bibtex <- cbind(autor_cita,titu_art, author, journal, volum, pages, year, publisher)
+    tabel_bibtex <- cbind(autor_cita,titu_art, equipesnomes, journal, volum, pagin, year, publisher)
 
     # Modify column names and format
     colnames(tabel_bibtex) <- c("fonte_ano","titulos","autores","jornais",
@@ -276,7 +511,6 @@ article_bib  <- function(input_date, input_tam, position_artic, total_list){
     volumes <- tabela_ent$volumes
     paginas <- tabela_ent$paginas
     anos <- tabela_ent$anos
-    publicacoes <- tabela_ent$publicacoes
 
     # Create the elements of the bibtex format structure
     espaco <- "  "
@@ -287,7 +521,7 @@ article_bib  <- function(input_date, input_tam, position_artic, total_list){
     volumeart <- "volume="
     paginasart <- "pages="
     anosart <- "year="
-    publicacaoart <- "publisher="
+    #publicacaoart <- "publisher="
     chave_entrada <- "{"
     chave_saida <- "}"
 
@@ -305,8 +539,6 @@ article_bib  <- function(input_date, input_tam, position_artic, total_list){
                      chave_saida)
     ano <- paste0(anosart,chave_entrada,anos,
                   chave_saida)
-    publicacao <- paste0(publicacaoart,chave_entrada,
-                         publicacoes, chave_saida)
 
     # Create bibtex format for articles
     referen_bibtex <- paste0(chave,"\n",
@@ -315,8 +547,7 @@ article_bib  <- function(input_date, input_tam, position_artic, total_list){
                              espaco,jornal, virgula,"\n",
                              espaco,volume, virgula,"\n",
                              espaco,pagina, virgula,"\n",
-                             espaco,ano, virgula,"\n",
-                             espaco,publicacao,"\n", chave_saida,
+                             espaco,ano,"\n",chave_saida,
                              espaco,collapse = ",\n")
 
     # Returns the file in bibtex format
@@ -324,7 +555,8 @@ article_bib  <- function(input_date, input_tam, position_artic, total_list){
   }
 
   # Call the function that generates the information
-  tabel_bibtex <- gerad_lister(input_date, input_tam, position_artic, total_list)
+  tabel_bibtex <- gerad_lister(input_date,input_tam,lista_prin,
+                               equipesnomes,position_artic,total_list)
 
   # Calculate file list size
   nlista <- length(position_artic)
